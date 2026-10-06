@@ -1,0 +1,33 @@
+I just checked the TimescaleDB releases page. The latest release (2.30.2) has Windows packages for PostgreSQL 16, 17 and 18. So the PostgreSQL 17 plan works, and you need version 2.18 or newer.
+need to install TimescaleDB. It is a free add-on to PostgreSQL. Without it, the database scripts fail at CREATE EXTENSION timescaledb, and the aggregate views can't be created. That could be the cause of the errors you saw.
+
+I just checked the TimescaleDB releases page. The latest release (2.30.2) has Windows packages for PostgreSQL 16, 17 and 18. So the PostgreSQL 17 plan works, and you need version 2.18 or newer.
+Steps on Windows
+Install PostgreSQL 17 from postgresql.org, if you haven't already. Note the install folder (usually C:\Program Files\PostgreSQL\17).
+Stop the PostgreSQL service. In the Services app, stop postgresql-x64-17.
+Download the TimescaleDB package. Go to github.com/timescale/timescaledb/releases, open the latest release (2.30.2), and under Assets download timescaledb-postgresql-17-windows-amd64.zip. The number in the name must match your PostgreSQL version.
+Extract the zip, then open PowerShell as Administrator in that folder and run:
+   .\setup.exe -pgconfig "C:\Program Files\PostgreSQL\17\bin\pg_config.exe"
+
+Answer yes when it offers to tune postgresql.conf.
+5. Check postgresql.conf (in C:\Program Files\PostgreSQL\17\data\). It must contain this line. If setup didn't add it, add it yourself:
+
+   shared_preload_libraries = 'timescaledb'
+Start the PostgreSQL service again.
+Test it. In pgAdmin, on your ems database, run:
+sql
+   CREATE EXTENSION IF NOT EXISTS timescaledb;
+   SELECT extversion FROM pg_extension WHERE extname = 'timescaledb';
+
+You should see a version number such as 2.30.2.
+
+If step 7 gives an error, send me the exact message.
+
+Then install the EMS database
+
+Run ems_all_in_one.sql on an empty database, then ems_check.sql. Every line should say OK.
+
+If something goes wrong
+"extension timescaledb is not available" means the package was not installed into that PostgreSQL, or its number doesn't match your PostgreSQL version.
+"must be preloaded" means step 5 or the restart in step 6 was missed.
+"could not load library" usually means the Microsoft Visual C++ Redistributable (2015-2022, x64) is missing. Install it and restart the service.
